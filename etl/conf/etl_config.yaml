@@ -1,0 +1,3 @@
+# ETL config: paths relative to repo root or absolute
+input_path: etl/input/ppd
+output_path: etl/output

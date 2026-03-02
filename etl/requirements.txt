@@ -1,0 +1,9 @@
+# ETL: Spark job and loader script dependencies
+# Create venv: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+pyspark>=3.4.0
+PyYAML>=6.0
+# Loader script (load_csv_to_dynamodb.py) uses backend app.config and DynamoDB
+boto3>=1.28.0
+pydantic-settings>=2.0.0
+pandas>=2.0.0
+tqdm>=4.65.0

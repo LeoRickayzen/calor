@@ -1,0 +1,554 @@
+openapi: 3.1.0
+info:
+  title: UK House Price Performance API
+  description: API for querying pre-aggregated house price metrics by location and
+    dimensions.
+  version: 0.1.0
+paths:
+  /api/performance:
+    get:
+      tags:
+      - performance
+      summary: List Performance
+      description: Return all performance items for a location, optionally filtered
+        by dimensions. Each item includes line_graph and heatmap_graph.
+      operationId: list_performance_api_performance_get
+      parameters:
+      - name: location_type
+        in: query
+        required: true
+        schema:
+          type: string
+          description: county | postcode | borough
+          title: Location Type
+        description: county | postcode | borough
+      - name: location_value
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          title: Location Value
+      - name: house_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Type
+      - name: tenure
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tenure
+      - name: size_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Size Band
+      - name: year_built_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Year Built Band
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/performance/line:
+    get:
+      tags:
+      - performance
+      summary: Line Graph
+      description: 'Return time-ordered line graph by year of sale. Uses stored line_graph
+        from matching item(s);
+
+        if multiple items match, series are merged by year_sold (weighted by sale_count).'
+      operationId: line_graph_api_performance_line_get
+      parameters:
+      - name: location_type
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Location Type
+      - name: location_value
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          title: Location Value
+      - name: house_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Type
+      - name: tenure
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tenure
+      - name: size_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Size Band
+      - name: year_built_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Year Built Band
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineGraphResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/performance/heatmap:
+    get:
+      tags:
+      - performance
+      summary: Heatmap
+      description: 'Return heatmap cells (year_bought × year_sold) with full metrics.
+        Uses stored heatmap_graph from matching item(s);
+
+        if multiple items match, cells are merged by (year_bought, year_sold).'
+      operationId: heatmap_api_performance_heatmap_get
+      parameters:
+      - name: location_type
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Location Type
+      - name: location_value
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          title: Location Value
+      - name: house_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Type
+      - name: tenure
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tenure
+      - name: size_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Size Band
+      - name: year_built_band
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Year Built Band
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/dimensions/{dimension_name}:
+    get:
+      tags:
+      - dimensions
+      summary: List Dimension Values
+      description: Return all values for a dimension (e.g. county, house_type) for
+        filter dropdowns.
+      operationId: list_dimension_values_api_dimensions__dimension_name__get
+      parameters:
+      - name: dimension_name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Dimension Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DimensionListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Health Get
+components:
+  schemas:
+    DimensionIndexItem:
+      properties:
+        dimension_name:
+          type: string
+          title: Dimension Name
+        value:
+          type: string
+          title: Value
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+        sale_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sale Count
+      type: object
+      required:
+      - dimension_name
+      - value
+      title: DimensionIndexItem
+      description: One row in dimension_index (filter option).
+    DimensionListResponse:
+      properties:
+        dimension_name:
+          type: string
+          title: Dimension Name
+        values:
+          items:
+            $ref: '#/components/schemas/DimensionIndexItem'
+          type: array
+          title: Values
+      type: object
+      required:
+      - dimension_name
+      - values
+      title: DimensionListResponse
+      description: List of dimension values for filter dropdowns.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HeatmapCell:
+      properties:
+        year_bought:
+          type: string
+          title: Year Bought
+        year_sold:
+          type: string
+          title: Year Sold
+        avg_price:
+          type: number
+          title: Avg Price
+        median_price:
+          type: number
+          title: Median Price
+        sale_count:
+          type: integer
+          title: Sale Count
+          default: 0
+        mode_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mode Price
+        min_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Min Price
+        max_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Max Price
+        mean_pct_appreciation:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mean Pct Appreciation
+        pct_sales_at_loss:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Pct Sales At Loss
+      type: object
+      required:
+      - year_bought
+      - year_sold
+      - avg_price
+      - median_price
+      title: HeatmapCell
+      description: One cell in the heatmap (year_bought × year_sold) with full metrics.
+    HeatmapCellStored:
+      properties:
+        year_bought:
+          type: string
+          title: Year Bought
+        year_sold:
+          type: string
+          title: Year Sold
+        avg_price:
+          type: number
+          title: Avg Price
+        median_price:
+          type: number
+          title: Median Price
+        sale_count:
+          type: integer
+          title: Sale Count
+          default: 0
+        mode_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mode Price
+        min_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Min Price
+        max_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Max Price
+        mean_pct_appreciation:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mean Pct Appreciation
+        pct_sales_at_loss:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Pct Sales At Loss
+      type: object
+      required:
+      - year_bought
+      - year_sold
+      - avg_price
+      - median_price
+      title: HeatmapCellStored
+      description: One cell in the stored heatmap_graph (year_bought × year_sold).
+    HeatmapResponse:
+      properties:
+        cells:
+          items:
+            $ref: '#/components/schemas/HeatmapCell'
+          type: array
+          title: Cells
+      type: object
+      required:
+      - cells
+      title: HeatmapResponse
+      description: 'Heatmap data: array of cells (stored heatmap_graph shape).'
+    LineGraphPoint:
+      properties:
+        year_sold:
+          type: string
+          title: Year Sold
+        avg_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Avg Price
+        median_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Median Price
+        mode_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mode Price
+        sale_count:
+          type: integer
+          title: Sale Count
+          default: 0
+      type: object
+      required:
+      - year_sold
+      title: LineGraphPoint
+      description: One point on the line graph (year of sale + metrics).
+    LineGraphPointStored:
+      properties:
+        year_sold:
+          type: string
+          title: Year Sold
+        avg_price:
+          type: number
+          title: Avg Price
+        median_price:
+          type: number
+          title: Median Price
+        mode_price:
+          type: number
+          title: Mode Price
+        sale_count:
+          type: integer
+          title: Sale Count
+          default: 0
+      type: object
+      required:
+      - year_sold
+      - avg_price
+      - median_price
+      - mode_price
+      title: LineGraphPointStored
+      description: One point in the stored line_graph (by year of sale).
+    LineGraphResponse:
+      properties:
+        series:
+          items:
+            $ref: '#/components/schemas/LineGraphPoint'
+          type: array
+          title: Series
+      type: object
+      required:
+      - series
+      title: LineGraphResponse
+      description: 'Line graph data: time-ordered points by year_sold.'
+    PerformanceItemResponse:
+      properties:
+        line_graph:
+          items:
+            $ref: '#/components/schemas/LineGraphPointStored'
+          type: array
+          title: Line Graph
+        heatmap_graph:
+          items:
+            $ref: '#/components/schemas/HeatmapCellStored'
+          type: array
+          title: Heatmap Graph
+        sale_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sale Count
+      type: object
+      required:
+      - line_graph
+      - heatmap_graph
+      title: PerformanceItemResponse
+      description: One performance item returned by the API (value only; filters are
+        in the request).
+    PerformanceListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PerformanceItemResponse'
+          type: array
+          title: Items
+        count:
+          type: integer
+          title: Count
+      type: object
+      required:
+      - items
+      - count
+      title: PerformanceListResponse
+      description: List of performance items (raw query result).
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
