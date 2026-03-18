@@ -56,3 +56,39 @@ uvicorn app.main:app --reload
 Integration tests use **http://localhost:8000** by default (override with `HOUSES_DYNAMODB_ENDPOINT_URL`). If DynamoDB is not reachable, integration tests are skipped.
 
 Unit only: `pytest tests/unit -v` or `pytest -m "not integration" -v`.
+
+## Deployment (AWS)
+
+Deployment scripts live in `backend/deployment/`. They use the default AWS credential chain (e.g. `aws configure` or `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`).
+
+**Create DynamoDB tables in AWS:** Run once per AWS account/region to create the tables (`house_price_performance`, `dimension_index`) that the API expects. Idempotent: tables that already exist are left unchanged.
+
+```bash
+cd backend
+python deployment/create_dynamo_tables.py
+# or: uv run python deployment/create_dynamo_tables.py
+```
+
+Override region: `AWS_REGION=us-east-1 python deployment/create_dynamo_tables.py` or `--region us-east-1`.
+
+**Lambda (two-step):**
+
+1. **Create infrastructure (once):** Creates ECR repo, IAM role (Lambda + DynamoDB access), Lambda function, and API Gateway HTTP API. Builds and pushes the Docker image, then creates the Lambda and API. Run from `backend` with Docker and AWS CLI available.
+
+   ```bash
+   cd backend
+   python deployment/create_lambda_infra.py
+   # or: uv run python deployment/create_lambda_infra.py
+   ```
+
+   The script prints the API invoke URL; set your frontend `VITE_API_URL` to that URL. If the Lambda already exists, it exits and tells you to use the deploy script.
+
+2. **Deploy (update code):** Builds the image, pushes to ECR, and updates the Lambda function code. Use this for code changes after infrastructure exists.
+
+   ```bash
+   cd backend
+   python deployment/deploy_lambda.py
+   # or: uv run python deployment/deploy_lambda.py
+   ```
+
+   Override `--function-name`, `--ecr-repo`, `--region` or set `HOUSES_LAMBDA_FUNCTION_NAME`, `HOUSES_ECR_REPO`, `AWS_REGION`.

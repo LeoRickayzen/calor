@@ -8,6 +8,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from app.db.compression import decompress_graph_data
+
 
 class LocationType(str, Enum):
     """Location filter type."""
@@ -118,11 +120,11 @@ class HousePricePerformanceItem(BaseModel):
 
     @classmethod
     def from_dynamo(cls, item: dict[str, Any]) -> "HousePricePerformanceItem":
-        """Build from DynamoDB item value attributes only (line_graph, heatmap_graph, sale_count)."""
-        line_raw = item.get("line_graph") or []
+        """Build from DynamoDB item value attributes only (line_graph, heatmap_graph, sale_count). line_graph and heatmap_graph are zlib-compressed base64 strings."""
+        line_raw = decompress_graph_data(item["line_graph"])
         line_graph = [LineGraphPointStored.from_dynamo(p) for p in line_raw]
 
-        heat_raw = item.get("heatmap_graph") or []
+        heat_raw = decompress_graph_data(item["heatmap_graph"])
         heatmap_graph = [HeatmapCellStored.from_dynamo(c) for c in heat_raw]
 
         sale_count = item.get("sale_count")

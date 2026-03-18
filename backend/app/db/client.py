@@ -13,26 +13,24 @@ from app.config import settings
 
 
 def get_dynamo_client() -> BaseClient:
-    """Return a DynamoDB client (use endpoint_url for local)."""
-    kwargs: dict[str, Any] = {
-        "region_name": settings.dynamodb_region,
-        "aws_access_key_id": "dummy",
-        "aws_secret_access_key": "dummy",
-    }
-    if settings.dynamodb_endpoint_url and settings.dynamodb_endpoint_url.strip():
-        kwargs["endpoint_url"] = settings.dynamodb_endpoint_url.strip()
+    """Return a DynamoDB client (use endpoint_url for local; default creds for AWS)."""
+    kwargs: dict[str, Any] = {"region_name": settings.dynamodb_region}
+    endpoint = settings.dynamodb_endpoint_url and settings.dynamodb_endpoint_url.strip()
+    if endpoint:
+        kwargs["endpoint_url"] = endpoint
+        kwargs["aws_access_key_id"] = "dummy"
+        kwargs["aws_secret_access_key"] = "dummy"
     return boto3.client("dynamodb", **kwargs)
 
 
 def get_dynamo_resource() -> Any:
-    """Return a DynamoDB resource (use endpoint_url for local)."""
-    kwargs: dict[str, Any] = {
-        "region_name": settings.dynamodb_region,
-        "aws_access_key_id": "dummy",
-        "aws_secret_access_key": "dummy",
-    }
-    if settings.dynamodb_endpoint_url and settings.dynamodb_endpoint_url.strip():
-        kwargs["endpoint_url"] = settings.dynamodb_endpoint_url.strip()
+    """Return a DynamoDB resource (use endpoint_url for local; default creds for AWS)."""
+    kwargs: dict[str, Any] = {"region_name": settings.dynamodb_region}
+    endpoint = settings.dynamodb_endpoint_url and settings.dynamodb_endpoint_url.strip()
+    if endpoint:
+        kwargs["endpoint_url"] = endpoint
+        kwargs["aws_access_key_id"] = "dummy"
+        kwargs["aws_secret_access_key"] = "dummy"
     return boto3.resource("dynamodb", **kwargs)
 
 

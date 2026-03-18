@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from app.api.routes.dimensions import get_repo as get_dimensions_repo
 from app.api.routes.performance import get_repo as get_performance_repo
 from app.config import settings
+from app.db.compression import compress_graph_data
 from app.db.repository import PerformanceRepository
 from app.db.tables import ensure_tables
 from app.main import app
@@ -67,31 +68,35 @@ def seed_house_performance(dynamo_resource, tables_created) -> None:
     table = dynamo_resource.Table(settings.table_house_price_performance)
 
     # Item 1: flat, freehold, 50_75, 1990_1999 in Greater London
+    line1 = [
+        {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
+        {"year_sold": "2021", "avg_price": 510000, "median_price": 500000, "mode_price": 490000, "sale_count": 158},
+    ]
+    heat1 = [
+        {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 0, "median_appreciation_pounds": 0, "sale_count": 142, "pct_sales_appreciated": 0},
+        {"year_bought": "2021", "year_sold": "2021", "avg_appreciation_pounds": 30000, "median_appreciation_pounds": 28000, "sale_count": 158, "avg_appreciation_pct": 6.25, "median_appreciation_pct": 5.9, "pct_sales_appreciated": 95.0},
+    ]
     table.put_item(
         Item={
             "pk": "county#Greater London#flat#freehold#50_75#1990_1999",
-            "line_graph": [
-                {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
-                {"year_sold": "2021", "avg_price": 510000, "median_price": 500000, "mode_price": 490000, "sale_count": 158},
-            ],
-            "heatmap_graph": [
-                {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 0, "median_appreciation_pounds": 0, "sale_count": 142, "pct_sales_appreciated": 0},
-                {"year_bought": "2021", "year_sold": "2021", "avg_appreciation_pounds": 30000, "median_appreciation_pounds": 28000, "sale_count": 158, "avg_appreciation_pct": 6.25, "median_appreciation_pct": 5.9, "pct_sales_appreciated": 95.0},
-            ],
+            "line_graph": compress_graph_data(line1),
+            "heatmap_graph": compress_graph_data(heat1),
             "sale_count": 300,
         }
     )
 
     # Item 2: terraced, leasehold, 75_100, 1980_1990 in Greater London
+    line2 = [
+        {"year_sold": "2020", "avg_price": 520000, "median_price": 510000, "mode_price": 500000, "sale_count": 89},
+    ]
+    heat2 = [
+        {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 0, "median_appreciation_pounds": 0, "sale_count": 89, "pct_sales_appreciated": 0},
+    ]
     table.put_item(
         Item={
             "pk": "county#Greater London#terraced#leasehold#75_100#1980_1990",
-            "line_graph": [
-                {"year_sold": "2020", "avg_price": 520000, "median_price": 510000, "mode_price": 500000, "sale_count": 89},
-            ],
-            "heatmap_graph": [
-                {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 0, "median_appreciation_pounds": 0, "sale_count": 89, "pct_sales_appreciated": 0},
-            ],
+            "line_graph": compress_graph_data(line2),
+            "heatmap_graph": compress_graph_data(heat2),
             "sale_count": 89,
         }
     )

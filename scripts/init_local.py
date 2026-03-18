@@ -23,49 +23,48 @@ os.chdir(BACKEND)
 
 from app.config import settings
 from app.db.client import get_dynamo_client, get_dynamo_resource
+from app.db.compression import compress_graph_data
 from app.db.tables import ensure_tables
 
 
 def seed_house_performance(table) -> None:
     """Insert sample performance items. One row at county=all (default filters), plus per-location rows."""
     # Aggregate row: location_value and dimensions all "all" — returned when user keeps default filters
+    line_all = [
+        {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
+        {"year_sold": "2021", "avg_price": 510000, "median_price": 500000, "mode_price": 490000, "sale_count": 158},
+    ]
+    heat_all = [
+        {"year_bought": "2020", "year_sold": "2020", "avg_price": 480000, "median_price": 470000, "sale_count": 142},
+        {"year_bought": "2021", "year_sold": "2021", "avg_price": 510000, "median_price": 500000, "sale_count": 158},
+    ]
     table.put_item(
         Item={
             "pk": "county#all#all#all#all#all",
-            "line_graph": [
-                {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
-                {"year_sold": "2021", "avg_price": 510000, "median_price": 500000, "mode_price": 490000, "sale_count": 158},
-            ],
-            "heatmap_graph": [
-                {"year_bought": "2020", "year_sold": "2020", "avg_price": 480000, "median_price": 470000, "sale_count": 142},
-                {"year_bought": "2021", "year_sold": "2021", "avg_price": 510000, "median_price": 500000, "sale_count": 158},
-            ],
+            "line_graph": compress_graph_data(line_all),
+            "heatmap_graph": compress_graph_data(heat_all),
             "sale_count": 300,
         }
     )
     table.put_item(
         Item={
             "pk": "county#Greater London#flat#freehold#50_75#1990_1999",
-            "line_graph": [
-                {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
-                {"year_sold": "2021", "avg_price": 510000, "median_price": 500000, "mode_price": 490000, "sale_count": 158},
-            ],
-            "heatmap_graph": [
-                {"year_bought": "2020", "year_sold": "2020", "avg_price": 480000, "median_price": 470000, "sale_count": 142},
-                {"year_bought": "2021", "year_sold": "2021", "avg_price": 510000, "median_price": 500000, "sale_count": 158},
-            ],
+            "line_graph": compress_graph_data(line_all),
+            "heatmap_graph": compress_graph_data(heat_all),
             "sale_count": 300,
         }
     )
+    line_terraced = [
+        {"year_sold": "2020", "avg_price": 520000, "median_price": 510000, "mode_price": 500000, "sale_count": 89},
+    ]
+    heat_terraced = [
+        {"year_bought": "2020", "year_sold": "2020", "avg_price": 520000, "median_price": 510000, "sale_count": 89},
+    ]
     table.put_item(
         Item={
             "pk": "county#Greater London#terraced#leasehold#75_100#1980_1990",
-            "line_graph": [
-                {"year_sold": "2020", "avg_price": 520000, "median_price": 510000, "mode_price": 500000, "sale_count": 89},
-            ],
-            "heatmap_graph": [
-                {"year_bought": "2020", "year_sold": "2020", "avg_price": 520000, "median_price": 510000, "sale_count": 89},
-            ],
+            "line_graph": compress_graph_data(line_terraced),
+            "heatmap_graph": compress_graph_data(heat_terraced),
             "sale_count": 89,
         }
     )

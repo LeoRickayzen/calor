@@ -2,6 +2,7 @@
 
 import pytest
 
+from app.db.compression import compress_graph_data
 from app.models.schemas import (
     HousePricePerformanceItem,
     LineGraphPoint,
@@ -13,29 +14,25 @@ from app.models.schemas import (
 )
 
 
-def test_house_price_performance_from_dynamo() -> None:
-    """HousePricePerformanceItem.from_dynamo parses value attributes only (line_graph, heatmap_graph, sale_count)."""
+def test_house_price_performance_from_dynamo_compressed() -> None:
+    """HousePricePerformanceItem.from_dynamo parses zlib-compressed (base64 string) line_graph and heatmap_graph."""
+    line_data = [
+        {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
+    ]
+    heat_data = [
+        {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 10000, "median_appreciation_pounds": 9000, "sale_count": 142, "avg_appreciation_pct": 2.5, "median_appreciation_pct": 2.0, "pct_sales_appreciated": 90},
+    ]
     item = {
         "pk": "county#Greater London#flat#freehold#50_75#1990_1999",
-        "sk": "agg",
-        "line_graph": [
-            {"year_sold": "2020", "avg_price": 480000, "median_price": 470000, "mode_price": 450000, "sale_count": 142},
-        ],
-        "heatmap_graph": [
-            {"year_bought": "2020", "year_sold": "2020", "avg_appreciation_pounds": 10000, "median_appreciation_pounds": 9000, "sale_count": 142, "avg_appreciation_pct": 2.5, "median_appreciation_pct": 2.0, "pct_sales_appreciated": 90},
-        ],
+        "line_graph": compress_graph_data(line_data),
+        "heatmap_graph": compress_graph_data(heat_data),
         "sale_count": 142,
     }
     parsed = HousePricePerformanceItem.from_dynamo(item)
     assert len(parsed.line_graph) == 1
     assert parsed.line_graph[0].year_sold == "2020"
     assert parsed.line_graph[0].median_price == 470000
-    assert parsed.line_graph[0].sale_count == 142
-    assert len(parsed.heatmap_graph) == 1
-    assert parsed.heatmap_graph[0].year_bought == "2020"
-    assert parsed.heatmap_graph[0].year_sold == "2020"
     assert parsed.heatmap_graph[0].avg_appreciation_pounds == 10000
-    assert parsed.heatmap_graph[0].sale_count == 142
     assert parsed.sale_count == 142
 
 

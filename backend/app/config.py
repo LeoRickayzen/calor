@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # DynamoDB (default local; set to "" for real AWS)
     dynamodb_endpoint_url: Optional[str] = "http://localhost:8000"
-    dynamodb_region: str = "eu-west-2"
+    dynamodb_region: str = "us-east-1"
     table_house_price_performance: str = "house_price_performance"
     table_street_performance: str = "street_performance"
     table_property_sales: str = "property_sales"

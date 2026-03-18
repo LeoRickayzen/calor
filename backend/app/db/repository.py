@@ -38,7 +38,7 @@ class PerformanceRepository:
         tn = (tenure or "all").strip().lower()
         sb = (size_band or "all").strip().lower()
         ybb = (year_built_band or "all").strip().lower()
-        return f"{location_type}#{loc_val}#{ht}#{tn}#{sb}#{ybb}"
+        return f"{location_type.value}#{loc_val}#{ht}#{tn}#{sb}#{ybb}"
 
     def query_by_location(
         self,
