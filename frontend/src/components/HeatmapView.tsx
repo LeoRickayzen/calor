@@ -4,11 +4,9 @@ import type { HeatmapCell as HeatmapCellType } from '../types'
 import {
   HEATMAP_METRIC_OPTIONS,
   HEATMAP_YEARS,
-  YEAR_MAX,
-  YEAR_MIN,
   type HeatmapMetricKey,
 } from './heatmap/heatmapConfig'
-import { formatValue, getCellValue } from './heatmap/heatmapUtils'
+import { getCellValue } from './heatmap/heatmapUtils'
 import { HeatmapGrid } from './heatmap/HeatmapGrid'
 import { HeatmapMetricSelector } from './heatmap/HeatmapMetricSelector'
 

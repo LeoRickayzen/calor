@@ -93,7 +93,7 @@ export default function App() {
   }, [filters.location_type, filters.location_value, filters.house_type, filters.tenure, filters.size_band, filters.year_built_band])
 
   const handleFiltersChange = useCallback((f: FilterState) => {
-    setFilters((prev) => {
+    setFilters((_prev) => {
       const next = { ...f }
       if (lockLocationTypeToBorough) next.location_type = 'borough'
       return next
